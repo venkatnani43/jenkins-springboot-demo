@@ -17,19 +17,26 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean compile'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Test') {
+        stage('Docker Build') {
             steps {
-                sh 'mvn test'
+                sh 'docker build -t springboot-demo:latest .'
             }
         }
 
-        stage('Package') {
+        stage('Deploy') {
             steps {
-                sh 'mvn package -DskipTests'
+                sh '''
+                    docker rm -f springboot-demo || true
+
+                    docker run -d \
+                        --name springboot-demo \
+                        -p 8080:8080 \
+                        springboot-demo:latest
+                '''
             }
         }
     }
